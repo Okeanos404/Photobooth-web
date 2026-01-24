@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photobooth Studio</title>
+  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="icon" href="favicon.ico">
+</head>
+<body>
+
+  <div class="bg"></div>
+
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="mark">
+            <img src="assets/logo.png" alt="Photobooth Studio Logo" class="logo-img">
+        </div>
+
+        <div>
+          <h1>Photobooth Studio</h1>
+          <p>Frame template + Auto 4x Capture + Download strip</p>
+        </div>
+      </div>
+      <div class="right">
+        <span class="tiny">Simple UX • Aesthetic UI</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- CAMERA -->
+      <section class="card big">
+        <div class="card-head">
+          <div>
+            <h2>Live Camera</h2>
+            <span class="desc">Preview + pilih frame & efek</span>
+          </div>
+
+          <div class="head-actions">
+            <button id="btnStart" class="btn primary">Start</button>
+            <button id="btnMirror" class="btn ghost" disabled>Mirror: OFF</button>
+          </div>
+        </div>
+
+        <div class="preview">
+          <video id="video" autoplay playsinline></video>
+
+          <!-- Frame overlay -->
+          <div id="frameOverlay" class="frame-overlay korean"></div>
+
+          <!-- Flash -->
+          <div id="flash" class="flash hidden"></div>
+
+          <!-- Countdown -->
+          <div id="countdown" class="countdown hidden">
+            <div class="count-circle"></div>
+            <div id="countText" class="count-text">3</div>
+          </div>
+
+          <!-- HUD -->
+          <div class="hud">
+            <span id="hudFrame" class="pill">Frame: Korean</span>
+            <span id="hudFx" class="pill">Effect: None</span>
+            <span id="hudShots" class="pill">Shots: 0/4</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-block">
+            <label>Frame Template</label>
+            <div class="segmented">
+              <button class="seg active" data-frame="korean">Korean</button>
+              <button class="seg" data-frame="kawaii">Kawaii</button>
+              <button class="seg" data-frame="neon">Neon</button>
+            </div>
+          </div>
+
+          <div class="panel-block">
+            <label>Effect</label>
+            <select id="effect" class="select">
+              <option value="none" selected>None</option>
+              <option value="bw">B&W</option>
+              <option value="vintage">Vintage</option>
+              <option value="soft">Soft Glow</option>
+              <option value="grain">Film Grain</option>
+              <option value="cool">Cool</option>
+            </select>
+          </div>
+
+          <div class="panel-block">
+            <label>Timer (untuk tiap foto)</label>
+            <select id="timer" class="select">
+              <option value="0">No Timer</option>
+              <option value="2" selected>2s</option>
+              <option value="3">3s</option>
+              <option value="5">5s</option>
+            </select>
+          </div>
+
+          <div class="panel-actions">
+            <button id="btnAuto" class="btn primary" disabled>Auto 4x Capture</button>
+            <button id="btnRetake" class="btn ghost" disabled>Retake Last</button>
+            <button id="btnReset" class="btn danger">Reset</button>
+          </div>
+
+          <div id="progress" class="progress hidden">
+            <div id="bar" class="bar"></div>
+            <span id="progressText">Taking photos...</span>
+          </div>
+        </div>
+
+        <canvas id="canvas" class="hidden"></canvas>
+      </section>
+
+      <!-- STRIP -->
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2>Photostrip</h2>
+            <span class="desc">Hasil 4 foto</span>
+          </div>
+          <button id="btnDownload" class="btn primary" disabled>Download</button>
+        </div>
+
+        <div id="strip" class="strip">
+          <div class="slot">1</div>
+          <div class="slot">2</div>
+          <div class="slot">3</div>
+          <div class="slot">4</div>
+        </div>
+
+        <div class="tip">
+          Tips: Setelah 4 foto, tombol download otomatis aktif ✅
+        </div>
+
+        <canvas id="stripCanvas" class="hidden"></canvas>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <small>Made by Riyan ✨</small>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
