@@ -132,3 +132,7 @@ Karena akses kamera membutuhkan environment yang aman, jalankan project via loca
 ## 👤 Author
 
 Made with ❤️ by Riyan
+
+## 📄 License
+Project ini dibuat untuk kebutuhan edukasi dan portofolio pribadi.
+Silakan digunakan sebagai referensi belajar dengan tetap mencantumkan kredit.
