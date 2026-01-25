@@ -1,136 +1,134 @@
 ## 📸 Photobooth Studio (HTML • CSS • JavaScript)
 
-Photobooth Studio adalah web photobooth sederhana dan aesthetic berbasis HTML, CSS, dan JavaScript (tanpa library) yang bisa membuka kamera, mengambil foto otomatis 4x, menampilkan hasil dalam bentuk strip, lalu mengunduhnya sebagai gambar PNG.
+Photobooth Studio adalah web photobooth sederhana & aesthetic berbasis **HTML, CSS, dan JavaScript (Vanilla)** tanpa library tambahan.  
+Bisa membuka kamera, auto capture 4 foto, tampil dalam grid 2x2, lalu **download hasilnya sebagai PNG** dengan watermark.
 
-Project ini dibuat dengan fokus pada UI yang simple untuk user tapi tetap punya fitur “photobooth vibes”.
+---
 
-### ✨ Features
+## ✨ Features
 
-✅ Start camera (WebCam)
-✅ Live preview + mirror mode
-✅ Timer per foto (0s / 2s / 3s / 5s)
-✅ Auto capture 4 foto sekali klik
-✅ Frame template:
-
-Korean Minimal
-
-Kawaii Pink
-
-Cyber Neon
+✅ Start Camera (WebCam)  
+✅ Live camera 4 frame (2x2) seperti photobooth vibes  
+✅ Mirror mode  
+✅ Timer per foto (0s / 2s / 3s / 5s)  
+✅ Auto capture 4 foto sekali klik  
+✅ Frame Template:
+- Korean Minimal  
+- Kawaii Pink  
+- Neon Cyber  
 
 ✅ Effects (simple & useful):
+- None  
+- B&W  
+- Vintage  
+- Soft Glow  
+- Film Grain  
+- Cool  
 
-None
+✅ Shutter sound saat capture  
+✅ Retake last photo (ulang foto terakhir)  
+✅ Download PNG **(anti gepeng / crop cover)**  
+✅ Watermark otomatis **logo + “by Riyan”**  
 
-B&W
+---
 
-Vintage
+## 🛠️ Tech Stack
 
-Soft Glow
+- HTML
+- CSS
+- JavaScript (Vanilla)
+- Canvas API
+- WebCam API (`getUserMedia`)
 
-Film Grain
+---
 
-Cool
+## 📂 Project Structure
 
-✅ Shutter sound saat capture
-✅ Retake last photo (ulang foto terakhir)
-✅ Download photostrip PNG
-
-### 🛠️ Tech Stack
-
-HTML
-
-CSS
-
-JavaScript (Vanilla)
-
-Canvas API
-
-WebCam API (getUserMedia)
-
-### 📂 Project Structure
+```bash
 photobooth-studio/
 ├─ index.html
-├─ assets/style.css
-├─ assets/logo.png
-├─ favicon.ico
 ├─ script.js
+├─ assets/
+│  ├─ style.css
+│  └─ logo.png
+├─ favicon.ico
 └─ README.md
+```
+## 🚀 How To Run (Recommended)
 
+Karena akses kamera membutuhkan environment yang aman, jalankan project via localhost.
 
-### 🚀 How To Run
+### ✅ Option 1: VSCode Live Server (Recommended)
 
-Karena akses kamera membutuhkan environment yang aman, jalankan project via localhost / Live Server.
+- Buka folder project di VSCode
 
-✅ Option 1: VSCode Live Server (Recommended)
+- Install extension Live Server
 
-Buka folder project di VSCode
+- Klik kanan index.html → Open with Live Server
 
-Install extension Live Server
+- Izinkan permission kamera di browser
 
-Klik kanan index.html → Open with Live Server
+### ✅ Option 2: Laragon / XAMPP
 
-Izinkan permission kamera
+- Pindahkan folder project ke:
 
-✅ Option 2: Localhost (Laragon / XAMPP)
+- www (Laragon) atau
 
-Pindahkan folder project ke www (Laragon) atau htdocs (XAMPP)
+- htdocs (XAMPP)
 
-Jalankan server
+- Jalankan server
 
-Buka:
+- Buka: http://localhost/photobooth-studio/
 
-http://localhost/photobooth-studio/
+- ⚠️ Catatan: file:///C:/... tidak disarankan karena fitur kamera/download bisa diblok oleh browser.
 
-### 📌 How To Use
+## 🎮 How To Use
 
-Klik Start
+- Klik Start
 
-Pilih Frame Template
+- Pilih Frame Template
 
-Pilih Effect
+- Pilih Effect
 
-Pilih Timer per foto
+- Pilih Timer
 
-Klik Auto 4x Capture
+- Klik Auto 4x Capture
 
-Jika foto terakhir kurang bagus → klik Retake Last
+- Kalau foto terakhir kurang cocok → klik Retake Last
 
-Klik Download untuk mengunduh hasil strip
+- Klik Download untuk simpan hasil PNG
 
-### 🔒 Notes (Important)
+## 🔒 Notes (Important)
 
-Jika kamera tidak muncul:
+- Jika kamera tidak muncul:
 
-Pastikan menggunakan Live Server / localhost
+- Pastikan menggunakan Live Server / localhost
 
-Pastikan permission kamera di browser sudah diizinkan
+- Pastikan izin kamera sudah di-allow
 
-Browser yang disarankan:
+- Disarankan pakai Google Chrome / Microsoft Edge
 
-Google Chrome / Microsoft Edge
+## 🧩 Customization
+- Ganti Logo
 
-### 🧩 Customization
-Ganti Logo
+- Ganti file ini: assets/logo.png
 
-Taruh file logo bernama logo.png di folder project, lalu sudah otomatis dipakai pada bagian header.
+- Logo otomatis dipakai untuk: Header logo & Watermark hasil download
 
-Kalau mau ukuran lebih kecil/besar bisa edit di style.css pada bagian .mark dan .logo-img.
+## ✅ Roadmap (Next Upgrade)
 
-✅ Roadmap (Next Upgrade)
+### Fitur yang bisa kamu tambahin next:
 
-Beberapa fitur yang bisa ditambahkan untuk versi berikutnya:
+- Retake per slot (klik kotak 1/2/3/4 untuk retake)
 
-Retake per slot (klik slot foto untuk retake)
+- Pilih format output (Grid 2x2 / Strip Vertikal)
 
-Pilihan strip mode (2 foto / 4 foto)
+- Custom watermark text (input nama user)
 
-Tambah watermark nama user
+- Save hasil ke LocalStorage
 
-Save hasil ke LocalStorage
+- Share ke sosial media
 
-Share ke sosial media
-
-### 👤 Author
+## 👤 Author
 
 Made with ❤️ by Riyan
