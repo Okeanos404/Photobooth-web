@@ -42,6 +42,27 @@ Bisa membuka kamera, auto capture 4 foto, tampil dalam grid 2x2, lalu **download
 
 ---
 
+## 📱 Mobile Responsiveness Update (v1.1)
+
+Project ini telah dioptimalkan agar tetap nyaman digunakan di perangkat mobile tanpa merusak tampilan desktop.
+
+### 🔧 Improvements
+- Responsive camera layout khusus mobile
+- Mengganti tinggi kamera berbasis `vh` menjadi `aspect-ratio` di layar kecil
+- Kamera tidak lagi “loncat” saat address bar browser muncul
+- Crop kamera lebih natural di HP (tidak terlalu zoom ke wajah)
+- UI spacing lebih nyaman di layar kecil
+
+### 💡 Technical Notes
+- Desktop layout **tidak diubah**
+- Mobile menggunakan media query khusus (`max-width: 768px`)
+- Kamera tetap menggunakan **cover crop** (standar photobooth)
+- Output download PNG tetap **anti-gepeng & konsisten**
+
+> Tujuan update ini adalah menjaga pengalaman photobooth tetap stabil dan estetis di berbagai ukuran layar.
+
+---
+
 ## 📂 Project Structure
 
 ```bash
@@ -132,3 +153,7 @@ Karena akses kamera membutuhkan environment yang aman, jalankan project via loca
 ## 👤 Author
 
 Made with ❤️ by Riyan
+
+## 📄 License
+Project ini dibuat untuk kebutuhan edukasi dan portofolio pribadi.
+Silakan digunakan sebagai referensi belajar dengan tetap mencantumkan kredit.

@@ -347,3 +347,23 @@ body{
   text-align:center;
   color: var(--muted);
 }
+
+/* ===== MOBILE FIX ONLY ===== */
+@media (max-width: 768px){
+  .quad-grid{
+    height: auto !important;
+    aspect-ratio: 4 / 3;
+  }
+
+  .card.big{
+    padding:12px;
+  }
+
+  .header h1{
+    font-size:22px;
+  }
+
+  .head-actions{
+    gap:6px;
+  }
+}

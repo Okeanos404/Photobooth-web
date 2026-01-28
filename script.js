@@ -240,8 +240,12 @@ function captureCell(index){
 btnStart.addEventListener("click", async () => {
   try{
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" },
-      audio: false
+    video: {
+      facingMode: "user",
+      width: { ideal: 1280 },
+      height: { ideal: 960 }
+    },
+    audio: false
     });
 
     video.srcObject = stream;
