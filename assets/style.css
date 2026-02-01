@@ -184,7 +184,7 @@ body{
   max-width:420px;
   aspect-ratio:1 / 1;
   position:relative;
-  border-radius:18px;
+  border-radius:0px;
   overflow:hidden;
   background:#000;
   border:1px solid rgba(255,255,255,.12);
@@ -306,12 +306,22 @@ body{
   margin:0 auto 20px;
   padding:16px;
   border-radius:18px;
-  border:1px solid var(--border);
+  border:1px solid var(--border);    
   background:rgba(255,255,255,.04);
 }
 
 .compact-panel{
   max-width:760px;
+}
+
+.panel label{
+  display: block;
+  text-align: center;      /* teks ke tengah */
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 20px;     /* jarak ke grid */
+  color: var(--text);
+  letter-spacing: .3px;
 }
 
 .panel-grid{
@@ -349,6 +359,8 @@ body{
   background:rgba(255,255,255,.06);
   font-weight:800;
   cursor:pointer;
+  color:#e5e7eb;
+  letter-spacing:.3px;
 }
 
 .seg.active{
@@ -398,12 +410,12 @@ body{
 .preview-grid{
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:14px;
+  gap: 18px;
 }
 
 /* === DOWNLOAD BUTTON AREA === */
 .preview-actions{
-  margin-top: 24px;        /* jarak dari grid */
+  margin-top: 28px;        /* jarak dari grid */
   padding-bottom: 8px;
   display: flex;
   justify-content: center; /* tengah */
@@ -411,7 +423,7 @@ body{
 
 .preview-item{
   aspect-ratio:1 / 1;
-  border-radius:14px;
+  border-radius:0px;
   overflow:hidden;
   position:relative;
   background:rgba(0,0,0,.25);
