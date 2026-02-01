@@ -1,160 +1,138 @@
-## 📸 Photobooth Studio (HTML • CSS • JavaScript)
+# 📸 Photobooth Studio
 
-Photobooth Studio adalah web photobooth sederhana & aesthetic berbasis **HTML, CSS, dan JavaScript (Vanilla)** tanpa library tambahan.  
-Bisa membuka kamera, auto capture 4 foto, tampil dalam grid 2x2, lalu **download hasilnya sebagai PNG** dengan watermark.
+Photobooth Studio adalah aplikasi web **photobooth berbasis browser** yang memungkinkan pengguna mengambil foto langsung dari kamera, menerapkan efek visual, memilih frame, dan mengunduh hasil photostrip secara otomatis.
 
----
-
-## ✨ Features
-
-✅ Start Camera (WebCam)  
-✅ Live camera 4 frame (2x2) seperti photobooth vibes  
-✅ Mirror mode  
-✅ Timer per foto (0s / 2s / 3s / 5s)  
-✅ Auto capture 4 foto sekali klik  
-✅ Frame Template:
-- Korean Minimal  
-- Kawaii Pink  
-- Neon Cyber  
-
-✅ Effects (simple & useful):
-- None  
-- B&W  
-- Vintage  
-- Soft Glow  
-- Film Grain  
-- Cool  
-
-✅ Shutter sound saat capture  
-✅ Retake last photo (ulang foto terakhir)  
-✅ Download PNG **(anti gepeng / crop cover)**  
-✅ Watermark otomatis **logo + “by Riyan”**  
+Proyek ini dibuat dengan fokus pada **UI yang bersih, UX yang sederhana**, dan **tanpa dependensi framework** (pure HTML, CSS, dan JavaScript).
 
 ---
 
-## 🛠️ Tech Stack
+## ✨ Fitur Utama
 
-- HTML
-- CSS
-- JavaScript (Vanilla)
-- Canvas API
-- WebCam API (`getUserMedia`)
+* 🎥 **Live Camera Preview (1:1)**
+
+  * Menggunakan kamera depan (user-facing)
+  * Preview real-time berbasis `<canvas>` (bukan `<video>` langsung)
+
+* 🎞️ **Frame Template**
+
+  * Korean (minimal putih)
+  * Kawaii (pink soft)
+  * Neon (biru–ungu glow)
+
+* 🎨 **Photo Effects**
+
+  * None
+  * Black & White
+  * Vintage
+  * Soft Glow
+  * Film Grain
+  * Cool Tone
+
+* ⏱️ **Timer per Foto**
+
+  * 0s, 2s, 3s, 5s
+  * Countdown animasi di tengah kamera
+
+* 📷 **Auto Capture (6x Shot)**
+
+  * Mengambil foto otomatis satu per satu
+  * Disertai efek flash & shutter sound
+
+* 🔁 **Retake Last Photo**
+
+  * Mengulang foto terakhir tanpa reset semua
+
+* 🖼️ **Preview Grid**
+
+  * Menampilkan hasil foto sebelum diunduh
+  * Layout 2 × 3 (photostrip)
+
+* ⬇️ **Download Photostrip**
+
+  * Format PNG
+  * Tidak gepeng (cover crop)
+  * Watermark logo + teks
+  * Timestamp otomatis (tanggal & waktu)
+
+* 📱 **Responsive Design**
+
+  * Optimal untuk desktop & mobile
+  * Tombol shutter besar ala kamera
 
 ---
 
-## 📱 Mobile Responsiveness Update (v1.1)
+## 🧱 Struktur Proyek
 
-Project ini telah dioptimalkan agar tetap nyaman digunakan di perangkat mobile tanpa merusak tampilan desktop.
-
-### 🔧 Improvements
-- Responsive camera layout khusus mobile
-- Mengganti tinggi kamera berbasis `vh` menjadi `aspect-ratio` di layar kecil
-- Kamera tidak lagi “loncat” saat address bar browser muncul
-- Crop kamera lebih natural di HP (tidak terlalu zoom ke wajah)
-- UI spacing lebih nyaman di layar kecil
-
-### 💡 Technical Notes
-- Desktop layout **tidak diubah**
-- Mobile menggunakan media query khusus (`max-width: 768px`)
-- Kamera tetap menggunakan **cover crop** (standar photobooth)
-- Output download PNG tetap **anti-gepeng & konsisten**
-
-> Tujuan update ini adalah menjaga pengalaman photobooth tetap stabil dan estetis di berbagai ukuran layar.
+```text
+photobooth-studio/
+├── 📁 assets
+│   ├── 🖼️ logo.png
+│   └── 🎨 style.css
+├── 📝 README.md
+├── 📄 favicon.ico
+├── 🌐 index.html
+└── 📄 script.js
+```
 
 ---
 
-## 📂 Project Structure
+## 🚀 Cara Menjalankan
+
+> ⚠️ **PENTING:** Kamera hanya berfungsi jika dijalankan via server lokal.
+
+### Opsi 1 – Live Server (Direkomendasikan)
+
+1. Buka project di VS Code
+2. Install ekstensi **Live Server**
+3. Klik kanan `index.html` → **Open with Live Server**
+
+### Opsi 2 – Localhost Manual
 
 ```bash
-photobooth-studio/
-├─ index.html
-├─ script.js
-├─ assets/
-│  ├─ style.css
-│  └─ logo.png
-├─ favicon.ico
-└─ README.md
+npx serve
+# atau
+python -m http.server
 ```
-## 🚀 How To Run (Recommended)
 
-Karena akses kamera membutuhkan environment yang aman, jalankan project via localhost.
+Lalu buka di browser:
 
-### ✅ Option 1: VSCode Live Server (Recommended)
+```
+http://localhost:3000
+```
 
-- Buka folder project di VSCode
+---
 
-- Install extension Live Server
+## 🧠 Teknologi yang Digunakan
 
-- Klik kanan index.html → Open with Live Server
+* **HTML5** – Struktur aplikasi
+* **CSS3** – Glassmorphism UI, animasi, responsive
+* **Vanilla JavaScript**
 
-- Izinkan permission kamera di browser
+  * `getUserMedia()`
+  * `<canvas>` API
+  * Image processing manual (pixel manipulation)
 
-### ✅ Option 2: Laragon / XAMPP
+Tanpa framework. Tanpa library eksternal.
 
-- Pindahkan folder project ke:
+---
 
-- www (Laragon) atau
+## 🎯 Tujuan Proyek
 
-- htdocs (XAMPP)
+* Latihan **Web API (Camera & Canvas)**
+* Eksplorasi **UI/UX aplikasi interaktif**
+* Project portofolio frontend
 
-- Jalankan server
-
-- Buka: http://localhost/photobooth-studio/
-
-- ⚠️ Catatan: file:///C:/... tidak disarankan karena fitur kamera/download bisa diblok oleh browser.
-
-## 🎮 How To Use
-
-- Klik Start
-
-- Pilih Frame Template
-
-- Pilih Effect
-
-- Pilih Timer
-
-- Klik Auto 4x Capture
-
-- Kalau foto terakhir kurang cocok → klik Retake Last
-
-- Klik Download untuk simpan hasil PNG
-
-## 🔒 Notes (Important)
-
-- Jika kamera tidak muncul:
-
-- Pastikan menggunakan Live Server / localhost
-
-- Pastikan izin kamera sudah di-allow
-
-- Disarankan pakai Google Chrome / Microsoft Edge
-
-## 🧩 Customization
-- Ganti Logo
-
-- Ganti file ini: assets/logo.png
-
-- Logo otomatis dipakai untuk: Header logo & Watermark hasil download
-
-## ✅ Roadmap (Next Upgrade)
-
-### Fitur yang bisa kamu tambahin next:
-
-- Retake per slot (klik kotak 1/2/3/4 untuk retake)
-
-- Pilih format output (Grid 2x2 / Strip Vertikal)
-
-- Custom watermark text (input nama user)
-
-- Save hasil ke LocalStorage
-
-- Share ke sosial media
+---
 
 ## 👤 Author
 
-Made with ❤️ by Riyan
+**Riyan**
+Frontend Developer
 
-## 📄 License
-Project ini dibuat untuk kebutuhan edukasi dan portofolio pribadi.
-Silakan digunakan sebagai referensi belajar dengan tetap mencantumkan kredit.
+---
 
+## 📄 Lisensi
+
+Proyek ini bebas digunakan untuk pembelajaran dan pengembangan portofolio pribadi.
+
+> Jika kamu suka project ini, ⭐️ star repo-nya ya ✨

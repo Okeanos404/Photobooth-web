@@ -1,8 +1,14 @@
+/* =====================================================
+   ELEMENTS
+===================================================== */
 const video = document.getElementById("video");
+const canvas = document.getElementById("cameraCanvas");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
 const btnStart = document.getElementById("btnStart");
 const btnMirror = document.getElementById("btnMirror");
-const btnAuto = document.getElementById("btnAuto");
+const btnAuto = document.getElementById("btnAuto");     // legacy (hidden)
+const btnShutter = document.getElementById("btnShutter");
 const btnRetake = document.getElementById("btnRetake");
 const btnReset = document.getElementById("btnReset");
 const btnDownload = document.getElementById("btnDownload");
@@ -19,206 +25,193 @@ const hudFrame = document.getElementById("hudFrame");
 const hudFx = document.getElementById("hudFx");
 const hudShots = document.getElementById("hudShots");
 
-const progressBox = document.getElementById("progress");
-const bar = document.getElementById("bar");
-const progressText = document.getElementById("progressText");
-
+const previewGrid = document.getElementById("previewGrid");
 const stripCanvas = document.getElementById("stripCanvas");
 
-const quadCanvases = document.querySelectorAll(".quad-canvas");
-const quadCtxs = [...quadCanvases].map(c => c.getContext("2d", { willReadFrequently: true }));
-
+/* =====================================================
+   STATE
+===================================================== */
+const MAX_SHOTS = 6;
 let stream = null;
 let mirror = false;
-let isAutoRunning = false;
+let isRunning = false;
 let currentFrame = "korean";
-
-let captured = [];          // dataURL per slot
-let frozen = [false,false,false,false];
+let captured = [];
 let rafId = null;
 
-function wait(ms){ return new Promise(res => setTimeout(res, ms)); }
+/* =====================================================
+   UTILS
+===================================================== */
+const wait = (ms) => new Promise(res => setTimeout(res, ms));
+const clamp = (v) => Math.max(0, Math.min(255, v));
 
 function playShutterSound(){
   try{
-    const audio = new Audio("https://www.soundjay.com/camera/sounds/camera-shutter-click-01.mp3");
-    audio.volume = 0.6;
-    audio.play();
-  }catch(e){}
+    const a = new Audio("https://www.soundjay.com/camera/sounds/camera-shutter-click-01.mp3");
+    a.volume = 0.6;
+    a.play();
+  }catch{}
 }
 
-function updateHUD(){
-  const frameName = currentFrame === "korean" ? "Korean" : currentFrame === "kawaii" ? "Kawaii" : "Neon";
-  hudFrame.textContent = `Frame: ${frameName}`;
-
-  const fxNames = {
-    none: "None",
-    bw: "B&W",
-    vintage: "Vintage",
-    soft: "Soft Glow",
-    grain: "Film Grain",
-    cool: "Cool"
-  };
-  hudFx.textContent = `Effect: ${fxNames[effectSelect.value] || "None"}`;
-  hudShots.textContent = `Shots: ${captured.filter(Boolean).length}/4`;
-
-  btnRetake.disabled = captured.filter(Boolean).length === 0 || isAutoRunning;
-  btnDownload.disabled = captured.filter(Boolean).length !== 4;
+/* =====================================================
+   CANVAS SIZE (ANTI HITAM)
+===================================================== */
+function resizeCanvas(){
+  const size = canvas.parentElement.offsetWidth;
+  canvas.width = size;
+  canvas.height = size;
 }
+window.addEventListener("resize", resizeCanvas);
 
-segButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    if (isAutoRunning) return;
-    currentFrame = btn.dataset.frame;
-    segButtons.forEach(b => b.classList.toggle("active", b === btn));
-    updateHUD();
-  });
-});
-
-function clamp(v){ return Math.max(0, Math.min(255, v)); }
-
-function applyCanvasEffect(imageData, fx){
-  const d = imageData.data;
-  if (fx === "none") return imageData;
+/* =====================================================
+   EFFECT
+===================================================== */
+function applyEffect(img, fx){
+  if (fx === "none") return img;
+  const d = img.data;
 
   for (let i=0;i<d.length;i+=4){
     let r=d[i], g=d[i+1], b=d[i+2];
 
     if (fx === "bw"){
-      const gray = (r+g+b)/3;
-      r=g=b=gray;
+      const a=(r+g+b)/3; r=g=b=a;
     }
     if (fx === "vintage"){
-      r = clamp(r*1.1 + 12);
-      g = clamp(g*1.05 + 6);
-      b = clamp(b*0.9);
+      r=clamp(r*1.1+12); g=clamp(g*1.05+6); b=clamp(b*0.9);
     }
     if (fx === "soft"){
-      r = clamp(r*1.05 + 10);
-      g = clamp(g*1.05 + 10);
-      b = clamp(b*1.05 + 10);
+      r=clamp(r*1.05+10); g=clamp(g*1.05+10); b=clamp(b*1.05+10);
     }
     if (fx === "grain"){
-      const noise = (Math.random()-0.5)*24;
-      r = clamp(r + noise);
-      g = clamp(g + noise);
-      b = clamp(b + noise);
+      const n=(Math.random()-0.5)*24;
+      r=clamp(r+n); g=clamp(g+n); b=clamp(b+n);
     }
     if (fx === "cool"){
-      r = clamp(r*0.95);
-      g = clamp(g*1.02);
-      b = clamp(b*1.15 + 10);
+      r=clamp(r*0.95); g=clamp(g*1.02); b=clamp(b*1.15+10);
     }
 
     d[i]=r; d[i+1]=g; d[i+2]=b;
   }
-  return imageData;
+  return img;
 }
 
-function resizeQuadCanvases(){
-  quadCanvases.forEach((c) => {
-    const rect = c.getBoundingClientRect();
-    const w = Math.max(1, Math.floor(rect.width));
-    const h = Math.max(1, Math.floor(rect.height));
-    if (c.width !== w || c.height !== h){
-      c.width = w;
-      c.height = h;
-    }
-  });
-}
-
-// draw frame border tipis (biar preview ga kebanyakan putih)
-function drawFrameOverlay(ctx, w, h){
+/* =====================================================
+   FRAME OVERLAY
+===================================================== */
+function drawFrameOverlay(w,h){
+  const t=Math.max(6,Math.floor(w*0.02));
   ctx.save();
 
-  const thick = Math.max(6, Math.floor(w * 0.02)); // TIPIS
-
-  if (currentFrame === "korean"){
-    ctx.lineWidth = thick;
-    ctx.strokeStyle = "rgba(255,255,255,0.60)";
-    ctx.strokeRect(0, 0, w, h);
+  if (currentFrame==="korean"){
+    ctx.strokeStyle="rgba(255,255,255,.6)";
+    ctx.lineWidth=t;
+    ctx.strokeRect(0,0,w,h);
   }
 
-  if (currentFrame === "kawaii"){
-    ctx.lineWidth = thick;
-    ctx.strokeStyle = "rgba(255, 122, 208, 0.65)";
-    ctx.strokeRect(0, 0, w, h);
+  if (currentFrame==="kawaii"){
+    ctx.strokeStyle="rgba(255,122,208,.65)";
+    ctx.lineWidth=t;
+    ctx.strokeRect(0,0,w,h);
   }
 
-  if (currentFrame === "neon"){
-    ctx.lineWidth = thick;
-    ctx.strokeStyle = "rgba(56,189,248,0.45)";
-    ctx.strokeRect(0, 0, w, h);
+  if (currentFrame==="neon"){
+    ctx.strokeStyle="rgba(56,189,248,.5)";
+    ctx.lineWidth=t;
+    ctx.strokeRect(0,0,w,h);
 
-    ctx.lineWidth = Math.max(4, Math.floor(w * 0.012));
-    ctx.strokeStyle = "rgba(168,85,247,0.30)";
-    ctx.strokeRect(8, 8, w-16, h-16);
+    ctx.strokeStyle="rgba(168,85,247,.35)";
+    ctx.lineWidth=Math.max(4,t*0.6);
+    ctx.strokeRect(10,10,w-20,h-20);
   }
 
   ctx.restore();
 }
 
+/* =====================================================
+   DRAW LOOP (LIVE CAMERA)
+===================================================== */
 function drawLoop(){
-  resizeQuadCanvases();
+  if (!video.videoWidth) {
+    rafId = requestAnimationFrame(drawLoop);
+    return;
+  }
 
-  const fx = effectSelect.value;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  quadCanvases.forEach((canvas, i) => {
-    if (frozen[i]) return;
+  ctx.save();
+  if (mirror){
+    ctx.translate(canvas.width,0);
+    ctx.scale(-1,1);
+  }
 
-    const ctx = quadCtxs[i];
-    const w = canvas.width;
-    const h = canvas.height;
+  const vw=video.videoWidth, vh=video.videoHeight;
+  const r=canvas.width/canvas.height, vr=vw/vh;
+  let sx,sy,sw,sh;
 
-    if (!video.videoWidth) return;
+  if (vr>r){
+    sh=vh; sw=vh*r; sx=(vw-sw)/2; sy=0;
+  }else{
+    sw=vw; sh=vw/r; sx=0; sy=(vh-sh)/2;
+  }
 
-    ctx.save();
+  ctx.drawImage(video,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+  ctx.restore();
 
-    if (mirror){
-      ctx.translate(w, 0);
-      ctx.scale(-1, 1);
-    }
+  if (effectSelect.value!=="none"){
+    let img=ctx.getImageData(0,0,canvas.width,canvas.height);
+    img=applyEffect(img,effectSelect.value);
+    ctx.putImageData(img,0,0);
+  }
 
-    // cover crop
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    const cr = w / h;
-    const vr = vw / vh;
-
-    let sx, sy, sw, sh;
-
-    if (vr > cr){
-      sh = vh;
-      sw = vh * cr;
-      sx = (vw - sw) / 2;
-      sy = 0;
-    } else {
-      sw = vw;
-      sh = vw / cr;
-      sx = 0;
-      sy = (vh - sh) / 2;
-    }
-
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
-    ctx.restore();
-
-    if (fx !== "none"){
-      let img = ctx.getImageData(0, 0, w, h);
-      img = applyCanvasEffect(img, fx);
-      ctx.putImageData(img, 0, 0);
-    }
-
-    drawFrameOverlay(ctx, w, h);
-  });
-
+  drawFrameOverlay(canvas.width,canvas.height);
   rafId = requestAnimationFrame(drawLoop);
 }
 
-async function runCountdown(seconds){
-  if (seconds <= 0) return;
+/* =====================================================
+   HUD & PREVIEW
+===================================================== */
+function updateHUD(){
+  const names={korean:"Korean",kawaii:"Kawaii",neon:"Neon"};
+  hudFrame.textContent=`Frame: ${names[currentFrame]}`;
+  hudFx.textContent=`Effect: ${effectSelect.value}`;
+  hudShots.textContent=`Shots: ${captured.length}/${MAX_SHOTS}`;
+
+  btnRetake.disabled = captured.length===0 || isRunning;
+  btnDownload.disabled = captured.length!==MAX_SHOTS;
+}
+
+function renderPreview(){
+  previewGrid.innerHTML="";
+  for(let i=0;i<MAX_SHOTS;i++){
+    const d=document.createElement("div");
+    d.className="preview-item";
+
+    if(captured[i]){
+      const img=document.createElement("img");
+      img.src=captured[i];
+      d.appendChild(img);
+    }else{
+      d.classList.add("empty");
+      d.textContent=`Slot ${i+1}`;
+    }
+
+    const idx=document.createElement("span");
+    idx.className="preview-index";
+    idx.textContent=i+1;
+    d.appendChild(idx);
+
+    previewGrid.appendChild(d);
+  }
+}
+
+/* =====================================================
+   COUNTDOWN & FLASH
+===================================================== */
+async function runCountdown(sec){
+  if(sec<=0) return;
   countdownEl.classList.remove("hidden");
-  for (let i=seconds; i>0; i--){
-    countText.textContent = i;
+  for(let i=sec;i>0;i--){
+    countText.textContent=i;
     await wait(1000);
   }
   countdownEl.classList.add("hidden");
@@ -230,277 +223,196 @@ async function flash(){
   flashEl.classList.add("hidden");
 }
 
-function captureCell(index){
-  const canvas = quadCanvases[index];
-  frozen[index] = true;
+/* =====================================================
+   CAPTURE
+===================================================== */
+function capture(){
   return canvas.toDataURL("image/png");
 }
 
-// ===== Start
-btnStart.addEventListener("click", async () => {
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: "user",
-      width: { ideal: 1280 },
-      height: { ideal: 960 }
-    },
-    audio: false
-    });
+async function autoCapture(){
+  if(!stream || isRunning || captured.length>=MAX_SHOTS) return;
 
-    video.srcObject = stream;
+  isRunning=true;
+  btnShutter.disabled=true;
 
-    btnAuto.disabled = false;
-    btnMirror.disabled = false;
+  const sec=parseInt(timerSelect.value,10);
 
-    captured = [];
-    frozen = [false,false,false,false];
-    updateHUD();
-
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(drawLoop);
-
-  }catch(err){
-    alert("Kamera gagal dibuka. Jalankan via Live Server / localhost ya.");
-    console.error(err);
-  }
-});
-
-// ===== Mirror
-btnMirror.addEventListener("click", () => {
-  mirror = !mirror;
-  btnMirror.textContent = mirror ? "Mirror: ON" : "Mirror: OFF";
-});
-
-// ===== Auto
-btnAuto.addEventListener("click", async () => {
-  if (!stream || isAutoRunning) return;
-
-  isAutoRunning = true;
-
-  btnAuto.disabled = true;
-  btnStart.disabled = true;
-  btnMirror.disabled = true;
-  btnRetake.disabled = true;
-
-  effectSelect.disabled = true;
-  timerSelect.disabled = true;
-  segButtons.forEach(b => b.disabled = true);
-
-  captured = [];
-  frozen = [false,false,false,false];
-  updateHUD();
-
-  progressBox.classList.remove("hidden");
-  bar.style.width = "0%";
-
-  const seconds = parseInt(timerSelect.value, 10);
-
-  for (let i=0; i<4; i++){
-    progressText.textContent = `Photo ${i+1}/4`;
-    bar.style.width = `${i * 25}%`;
-
-    await runCountdown(seconds);
+  while(captured.length<MAX_SHOTS){
+    await runCountdown(sec);
     await flash();
     playShutterSound();
 
-    const url = captureCell(i);
-    captured[i] = url;
+    captured.push(capture());
     updateHUD();
-
-    await wait(250);
+    renderPreview();
+    await wait(200);
   }
 
-  bar.style.width = "100%";
-  progressText.textContent = "Done ✅";
-
-  await wait(600);
-  progressBox.classList.add("hidden");
-
-  isAutoRunning = false;
-
-  btnStart.disabled = false;
-  btnMirror.disabled = false;
-  btnAuto.disabled = false;
-
-  effectSelect.disabled = false;
-  timerSelect.disabled = false;
-  segButtons.forEach(b => b.disabled = false);
-
+  isRunning=false;
+  btnShutter.disabled=false;
   updateHUD();
-});
+}
 
-// ===== Retake Last
-btnRetake.addEventListener("click", async () => {
-  if (!stream || isAutoRunning) return;
-
-  let last = -1;
-  for (let i=3; i>=0; i--){
-    if (captured[i]) { last = i; break; }
-  }
-  if (last === -1) return;
-
-  frozen[last] = false;
-  captured[last] = null;
-  updateHUD();
-
-  const seconds = parseInt(timerSelect.value, 10);
-
-  await runCountdown(seconds);
-  await flash();
-  playShutterSound();
-
-  const url = captureCell(last);
-  captured[last] = url;
-  updateHUD();
-});
-
-// ===== Reset
-btnReset.addEventListener("click", () => {
-  if (isAutoRunning) return;
-
-  captured = [];
-  frozen = [false,false,false,false];
-  updateHUD();
-});
-
-// ===== Download (FIX: tidak gepeng, square 2x2)
-btnDownload.addEventListener("click", async () => {
-  if (captured.filter(Boolean).length !== 4) {
-    alert("Foto belum lengkap 4/4 😄");
+/* =====================================================
+   DOWNLOAD (2x3 STRIP)
+===================================================== */
+/* =====================================================
+   DOWNLOAD (2x3 STRIP + WATERMARK)
+===================================================== */
+btnDownload.addEventListener("click", async ()=>{
+  if(captured.length !== MAX_SHOTS){
+    alert("Foto belum lengkap 6/6");
     return;
   }
 
-  // === ukuran output (2x2 4:3)
-  const cellW = 900;
-  const cellH = 675; // 4:3
-  const gap = 24;
-  const pad = 40;
-  const footerH = 120;
+  const cell = 800;
+  const gap  = 24;
+  const pad  = 40;
+  const footerH = 140;
 
-  const outW = pad*2 + cellW*2 + gap;
-  const outH = pad*2 + cellH*2 + gap + footerH;
+  const outW = pad*2 + cell*2 + gap;
+  const outH = pad*2 + cell*3 + gap*2 + footerH;
 
-  stripCanvas.width = outW;
+  stripCanvas.width  = outW;
   stripCanvas.height = outH;
 
-  const ctx = stripCanvas.getContext("2d");
+  const sctx = stripCanvas.getContext("2d");
 
-  // BG
-  if (currentFrame === "korean") ctx.fillStyle = "#ffffff";
-  if (currentFrame === "kawaii") ctx.fillStyle = "#fff0f8";
-  if (currentFrame === "neon") ctx.fillStyle = "#0b1022";
-  ctx.fillRect(0, 0, outW, outH);
+  /* === BACKGROUND (ikut frame) === */
+  if(currentFrame === "korean") sctx.fillStyle = "#ffffff";
+  if(currentFrame === "kawaii") sctx.fillStyle = "#fff0f8";
+  if(currentFrame === "neon")   sctx.fillStyle = "#0b1022";
+  sctx.fillRect(0,0,outW,outH);
 
-  // helper cover (anti gepeng)
-  function drawImageCover(ctx, img, x, y, w, h){
-    const iw = img.width;
-    const ih = img.height;
-    const ir = iw / ih;
-    const r = w / h;
+  /* === LOAD IMAGES === */
+  const imgs = captured.map(src=>{
+    const i = new Image();
+    i.src = src;
+    return i;
+  });
+  await Promise.all(imgs.map(i=>new Promise(r=>i.onload=r)));
 
-    let sx, sy, sw, sh;
-    if (ir > r){
-      sh = ih;
-      sw = ih * r;
-      sx = (iw - sw) / 2;
-      sy = 0;
-    } else {
-      sw = iw;
-      sh = iw / r;
-      sx = 0;
-      sy = (ih - sh) / 2;
-    }
+  /* === DRAW PHOTOS (2x3) === */
+  imgs.forEach((img,i)=>{
+    const x = pad + (i%2)*(cell+gap);
+    const y = pad + Math.floor(i/2)*(cell+gap);
 
-    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+    sctx.drawImage(img, x, y, cell, cell);
+
+    // border halus
+    sctx.strokeStyle = "rgba(0,0,0,.15)";
+    sctx.lineWidth = 6;
+    sctx.strokeRect(x+3, y+3, cell-6, cell-6);
+  });
+
+  /* === FOOTER LINE === */
+  const footerY = pad*2 + cell*3 + gap*2;
+  sctx.globalAlpha = 0.15;
+  sctx.fillStyle = currentFrame==="neon" ? "#fff" : "#000";
+  sctx.fillRect(pad, footerY, outW-pad*2, 2);
+  sctx.globalAlpha = 1;
+
+  /* === LOGO === */
+  const logo = new Image();
+  logo.src = "assets/logo.png";
+
+  let logoLoaded = true;
+  await new Promise(res=>{
+    logo.onload = res;
+    logo.onerror = ()=>{ logoLoaded=false; res(); };
+  });
+
+  const textX = pad + (logoLoaded ? 56 : 0);
+  const textY = footerY + 48;
+
+  if(logoLoaded){
+    sctx.drawImage(logo, pad, footerY + 24, 42, 42);
   }
 
-  // load images
-  const imgs = captured.map(src => {
-    const im = new Image();
-    im.src = src;
-    return im;
-  });
-  await Promise.all(imgs.map(im => new Promise(res => im.onload = res)));
+  /* === TEXT === */
+  sctx.fillStyle = currentFrame==="neon" ? "#e5e7eb" : "#111827";
+  sctx.font = "900 26px Arial";
+  sctx.fillText("PHOTOBOOTH STUDIO", textX, textY);
 
-  const pos = [
-    [pad, pad],
-    [pad + cellW + gap, pad],
-    [pad, pad + cellH + gap],
-    [pad + cellW + gap, pad + cellH + gap],
-  ];
+  sctx.globalAlpha = 0.75;
+  sctx.font = "bold 16px Arial";
+  sctx.fillText("by Riyan", textX, textY + 26);
+  sctx.globalAlpha = 1;
 
-  pos.forEach(([x, y], i) => {
-    ctx.fillStyle = "rgba(0,0,0,.06)";
-    ctx.fillRect(x-5, y-5, cellW+10, cellH+10);
-
-    drawImageCover(ctx, imgs[i], x, y, cellW, cellH);
-
-    ctx.strokeStyle = "rgba(255,255,255,.75)";
-    ctx.lineWidth = 6;
-    ctx.strokeRect(x+3, y+3, cellW-6, cellH-6);
-  });
-
-  // footer
-  const footerY = pad*2 + cellH*2 + gap;
-
-  ctx.globalAlpha = 0.15;
-  ctx.fillStyle = currentFrame === "neon" ? "#ffffff" : "#000000";
-  ctx.fillRect(pad, footerY + 10, outW - pad*2, 2);
-  ctx.globalAlpha = 1;
-
-  // === watermark logo (jika gagal load, tetap lanjut)
-  let logoLoaded = false;
-  const wmLogo = new Image();
-  wmLogo.src = "assets/logo.png";
-
-  await new Promise((res) => {
-    wmLogo.onload = () => { logoLoaded = true; res(); };
-    wmLogo.onerror = () => { logoLoaded = false; res(); };
-  });
-
-  const wmX = pad;
-  const wmY = footerY + 30;
-
-  if (logoLoaded){
-    const wmSize = 42;
-    ctx.globalAlpha = 0.95;
-    ctx.drawImage(wmLogo, wmX, wmY, wmSize, wmSize);
-    ctx.globalAlpha = 1;
-  }
-
-  // text footer
-  ctx.fillStyle = currentFrame === "neon" ? "#e5e7eb" : "#111827";
-  ctx.font = "900 26px Arial";
-  ctx.fillText("PHOTOBOOTH STUDIO", wmX + 56, wmY + 28);
-
-  ctx.globalAlpha = 0.75;
-  ctx.font = "bold 16px Arial";
-  ctx.fillText("by Riyan", wmX + 56, wmY + 52);
-
-  // datetime kanan
-  ctx.globalAlpha = 0.65;
-  ctx.font = "14px Arial";
+  /* === DATE TIME (KANAN) === */
   const dt = new Date().toLocaleString();
-  const dtWidth = ctx.measureText(dt).width;
-  ctx.fillText(dt, outW - pad - dtWidth, wmY + 52);
-  ctx.globalAlpha = 1;
-// ✅ download (pakai Blob - lebih kuat daripada dataURL)
-stripCanvas.toBlob((blob) => {
-  if (!blob) {
-    alert("Gagal membuat file. Coba ulang ya.");
-    return;
-  }
+  sctx.font = "14px Arial";
+  sctx.globalAlpha = 0.65;
+  const dtW = sctx.measureText(dt).width;
+  sctx.fillText(dt, outW - pad - dtW, textY + 26);
+  sctx.globalAlpha = 1;
 
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "photobooth-studio.png";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  URL.revokeObjectURL(url);
-}, "image/png");
+  /* === DOWNLOAD === */
+  stripCanvas.toBlob(blob=>{
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "photobooth-studio.png";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, "image/png");
 });
+
+
+/* =====================================================
+   EVENTS
+===================================================== */
+btnStart.addEventListener("click", async ()=>{
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:"user",width:{ideal:1280},height:{ideal:1280}},
+      audio:false
+    });
+    video.srcObject=stream;
+    resizeCanvas();
+    rafId=requestAnimationFrame(drawLoop);
+
+    btnShutter.disabled=false;
+    btnMirror.disabled=false;
+  }catch{
+    alert("Kamera gagal dibuka. Gunakan Live Server / localhost.");
+  }
+});
+
+btnMirror.addEventListener("click",()=>{
+  mirror=!mirror;
+  btnMirror.textContent=`Mirror: ${mirror?"ON":"OFF"}`;
+});
+
+segButtons.forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    if(isRunning) return;
+    currentFrame=btn.dataset.frame;
+    segButtons.forEach(b=>b.classList.toggle("active",b===btn));
+    updateHUD();
+  });
+});
+
+btnShutter.addEventListener("click",autoCapture);
+btnAuto.addEventListener("click",autoCapture);
+
+btnRetake.addEventListener("click",()=>{
+  if(isRunning||captured.length===0) return;
+  captured.pop();
+  updateHUD();
+  renderPreview();
+});
+
+btnReset.addEventListener("click",()=>{
+  captured=[];
+  updateHUD();
+  renderPreview();
+});
+
+effectSelect.addEventListener("change",updateHUD);
+
+/* =====================================================
+   INIT
+===================================================== */
+updateHUD();
+renderPreview();

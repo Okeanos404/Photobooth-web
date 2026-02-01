@@ -4,23 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Photobooth Studio</title>
+
   <link rel="stylesheet" href="assets/style.css" />
   <link rel="icon" href="favicon.ico">
 </head>
 <body>
 
+  <!-- BACKGROUND -->
   <div class="bg"></div>
 
   <div class="app">
+
+    <!-- ================= HEADER ================= -->
     <header class="header">
       <div class="brand">
         <div class="mark">
-          <img src="assets/logo.png" alt="Photobooth Studio Logo" class="logo-img">
+          <img src="assets/logo.png" alt="Photobooth Studio" class="logo-img">
         </div>
-
         <div>
           <h1>Photobooth Studio</h1>
-          <p>Live camera • Auto 4 shots • Download</p>
+          <p>Live camera • Auto capture • Download</p>
         </div>
       </div>
 
@@ -29,51 +32,60 @@
       </div>
     </header>
 
-    <main class="layout-single">
-      <section class="card big">
+    <!-- ================= MAIN ================= -->
+    <main>
+
+      <section class="card">
+
+        <!-- ===== CAMERA HEADER ===== -->
         <div class="card-head">
           <div>
             <h2>Live Camera</h2>
-            <span class="desc">4 frame (2x2) seperti contoh, tapi compact</span>
+            <span class="desc">Square 1:1</span>
           </div>
 
           <div class="head-actions">
             <button id="btnStart" class="btn primary">Start</button>
             <button id="btnMirror" class="btn ghost" disabled>Mirror: OFF</button>
-            <button id="btnDownload" class="btn primary" disabled>Download</button>
           </div>
         </div>
 
-        <!-- CAMERA GRID (COMPACT) -->
+        <!-- ===== CAMERA AREA (ONLY CAMERA) ===== -->
         <div class="camera-wrap">
           <div class="quad">
             <video id="video" autoplay playsinline class="hidden-video"></video>
+            <canvas id="cameraCanvas"></canvas>
 
-            <div class="quad-grid">
-              <div class="quad-cell"><canvas class="quad-canvas" data-index="0"></canvas></div>
-              <div class="quad-cell"><canvas class="quad-canvas" data-index="1"></canvas></div>
-              <div class="quad-cell"><canvas class="quad-canvas" data-index="2"></canvas></div>
-              <div class="quad-cell"><canvas class="quad-canvas" data-index="3"></canvas></div>
-            </div>
-
+            <!-- HUD -->
             <div class="quad-hud">
               <span id="hudFrame" class="pill">Frame: Korean</span>
               <span id="hudFx" class="pill">Effect: None</span>
-              <span id="hudShots" class="pill">Shots: 0/4</span>
+              <span id="hudShots" class="pill">Shots: 0/6</span>
             </div>
 
+            <!-- COUNTDOWN -->
             <div id="countdown" class="countdown hidden">
               <div class="count-circle"></div>
               <div id="countText" class="count-text">3</div>
             </div>
 
+            <!-- FLASH -->
             <div id="flash" class="flash hidden"></div>
           </div>
         </div>
 
-        <!-- PANEL -->
+        <!-- ===== SHUTTER BUTTON (SEPARATE) ===== -->
+        <div class="shutter-wrap">
+          <button id="btnShutter" class="shutter-btn" disabled>
+            <span class="shutter-ring"></span>
+          </button>
+        </div>
+
+        <!-- ===== CONTROL PANEL ===== -->
         <div class="panel compact-panel">
           <div class="panel-grid">
+
+            <!-- FRAME -->
             <div class="panel-block">
               <label>Frame Template</label>
               <div class="segmented">
@@ -83,10 +95,11 @@
               </div>
             </div>
 
+            <!-- EFFECT -->
             <div class="panel-block">
               <label>Effect</label>
               <select id="effect" class="select">
-                <option value="none" selected>None</option>
+                <option value="none">None</option>
                 <option value="bw">B&W</option>
                 <option value="vintage">Vintage</option>
                 <option value="soft">Soft Glow</option>
@@ -95,8 +108,9 @@
               </select>
             </div>
 
+            <!-- TIMER -->
             <div class="panel-block">
-              <label>Timer (tiap foto)</label>
+              <label>Timer (per photo)</label>
               <select id="timer" class="select">
                 <option value="0">No Timer</option>
                 <option value="2" selected>2s</option>
@@ -106,25 +120,46 @@
             </div>
           </div>
 
+          <!-- ACTION BUTTONS -->
           <div class="panel-actions">
-            <button id="btnAuto" class="btn primary" disabled>Auto 4x Capture</button>
+            <button id="btnAuto" class="btn primary" disabled>Auto Capture</button>
             <button id="btnRetake" class="btn ghost" disabled>Retake Last</button>
             <button id="btnReset" class="btn danger">Reset</button>
           </div>
 
+          <!-- PROGRESS -->
           <div id="progress" class="progress hidden">
             <div id="bar" class="bar"></div>
             <span id="progressText">Taking photos...</span>
           </div>
         </div>
 
+        <!-- ===== PREVIEW ===== -->
+        <div class="panel">
+          <label>Preview Foto</label>
+
+          <!-- GRID FOTO -->
+          <div id="previewGrid" class="preview-grid"></div>
+
+          <!-- DOWNLOAD BUTTON (DI LUAR GRID) -->
+          <div class="preview-actions">
+            <button id="btnDownload" class="btn primary" disabled>
+            Download Photostrip
+            </button>
+          </div>
+        </div>
+
+        <!-- OUTPUT -->
         <canvas id="stripCanvas" class="hidden"></canvas>
+
       </section>
     </main>
 
+    <!-- ================= FOOTER ================= -->
     <footer class="footer">
       <small>Made by Riyan ✨</small>
     </footer>
+
   </div>
 
   <script src="script.js"></script>
