@@ -475,3 +475,15 @@ body{
   .compact-panel{max-width:100%;}
   .shutter-btn{width:58px;height:58px;}
 }
+
+.header{
+    align-items: flex-start;
+  }
+
+  .header .tiny{
+    font-size: 11px;              /* lebih kecil */
+    padding: 6px 10px;            /* lebih ramping */
+    white-space: nowrap;          /* JANGAN turun baris */
+    max-width: 140px;             /* batasi lebar */
+    text-align: center;
+  }
